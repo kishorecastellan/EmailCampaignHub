@@ -49,7 +49,8 @@ const templateTable = tables["EmailTemplateMetadata"];
 const engagementTable = tables["EmailEngagementEvent"];
 
 const dataStack = Stack.of(campaignTable);
-const tableParamsPrefix = "/email-campaign-hub/sandbox/tables";
+const envName = (process.env.AWS_BRANCH || "sandbox").replace(/[^a-zA-Z0-9_-]/g, "-");
+const tableParamsPrefix = `/email-campaign-hub/${envName}/tables`;
 
 new StringParameter(dataStack, "CampaignTableNameParam", {
   parameterName: `${tableParamsPrefix}/campaign`,
@@ -77,16 +78,13 @@ const campaignQueue = new Queue(functionStack, "CampaignQueue", {
   visibilityTimeout: Duration.seconds(90),
 });
 
-const sesConfigurationSetName = "email-campaign-hub";
 const sesConfigurationSet = new ConfigurationSet(functionStack, "CampaignSesConfigurationSet", {
-  configurationSetName: sesConfigurationSetName,
   reputationMetrics: true,
   sendingEnabled: true,
 });
 
 const sesEventsTopic = new Topic(functionStack, "CampaignSesEventsTopic", {
-  displayName: "Email Campaign Hub SES Events",
-  topicName: "email-campaign-hub-ses-events",
+  displayName: `Email Campaign Hub SES Events (${envName})`,
 });
 
 const trackedEvents = [
